@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 9735571b0da18439bab7a6c54e66cfb6
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - _shadowMapShader: {fileID: 4800000, guid: 5fde0df26ad9c4f1d88bae0fa86f7d58, type: 3}
+  - _shadowMap: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
