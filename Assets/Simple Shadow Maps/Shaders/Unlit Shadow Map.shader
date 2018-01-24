@@ -1,3 +1,6 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 Shader "Shadow/Unlit Shadow Map"
 {
 	Properties
@@ -38,11 +41,11 @@ Shader "Shadow/Unlit Shadow Map"
 				{
 					Input o;
 					
-					o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+					o.pos = UnityObjectToClipPos(v.vertex);
 					o.uv_MainTex = v.texcoord * _MainTex_ST.xy + _MainTex_ST.zw;
 					
-					o.uA.xy = mul(_ShadowMapMat, mul(_Object2World, v.vertex));
-					o.uA.z = -mul(_ShadowMapMV, mul(_Object2World, v.vertex)).z / _CameraSettings.x;
+					o.uA.xy = mul(_ShadowMapMat, mul(unity_ObjectToWorld, v.vertex));
+					o.uA.z = -mul(_ShadowMapMV, mul(unity_ObjectToWorld, v.vertex)).z / _CameraSettings.x;
 					
 					return o;
 				}
