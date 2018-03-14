@@ -30,6 +30,10 @@ public class ShadowProjector : MonoBehaviour
     private TextureSize _size = TextureSize.size1024;
     [SerializeField]
     private bool _realTimeShadow = false;
+    [SerializeField]
+    private RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
+    [SerializeField]
+    private FilterMode filterMode = FilterMode.Point;
     //
     private Matrix4x4 _offset;
     private Camera _camera;
@@ -41,7 +45,7 @@ public class ShadowProjector : MonoBehaviour
         _camera.aspect = 1;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         if (_realTimeShadow)
         {
@@ -64,8 +68,8 @@ public class ShadowProjector : MonoBehaviour
     {
         int shadowSize = (int)_size;
 
-        RenderTexture renderTexture = RenderTexture.GetTemporary(shadowSize, shadowSize, 16, RenderTextureFormat.ARGBFloat);
-        renderTexture.filterMode = FilterMode.Point;
+        RenderTexture renderTexture = RenderTexture.GetTemporary(shadowSize, shadowSize, 24, format);
+        renderTexture.filterMode = filterMode;
 
         Render(_camera, renderTexture);
 
@@ -80,33 +84,30 @@ public class ShadowProjector : MonoBehaviour
     {
         cam.renderingPath = RenderingPath.VertexLit;
         cam.enabled = false;
-        cam.orthographic = true;
+        // cam.orthographic = true;
         cam.targetTexture = renderTexture;
-        cam.aspect = 1;
+        // cam.aspect = 1;
         cam.RenderWithShader(_shadowMapShader, "RenderType");
 
-        var tmp = RenderTexture.GetTemporary(renderTexture.width, renderTexture.height, 0, RenderTextureFormat.ARGBFloat);
-
-        for (var i = 0; i < blurIterations; i++)
+        if (blurIterations > 0)
         {
-            Graphics.Blit(renderTexture, tmp, new Material(Shader.Find("Hidden/Gauss Blur")), 1);
-            Graphics.Blit(tmp, renderTexture, new Material(Shader.Find("Hidden/Gauss Blur")), 2);
+            var tmp = RenderTexture.GetTemporary(renderTexture.width, renderTexture.height, 0, format);
+            for (var i = 0; i < blurIterations; i++)
+            {
+                Graphics.Blit(renderTexture, tmp, new Material(Shader.Find("Hidden/Gauss Blur")), 1);
+                Graphics.Blit(tmp, renderTexture, new Material(Shader.Find("Hidden/Gauss Blur")), 2);
+            }
+
+            Graphics.Blit(tmp, renderTexture);
+            RenderTexture.ReleaseTemporary(tmp);
         }
-
-        if(blurIterations > 0)
-        {
-        Graphics.Blit(tmp, renderTexture);
-        }
-
-        RenderTexture.ReleaseTemporary(tmp);
-
     }
 
     public void BakeShadow(Texture2D outputTexture)
     {
         int shadowSize = outputTexture.width;
 
-        RenderTexture renderTexture = RenderTexture.GetTemporary(shadowSize, shadowSize, 16, RenderTextureFormat.ARGBFloat);
+        RenderTexture renderTexture = RenderTexture.GetTemporary(shadowSize, shadowSize, 16, format);
 
         Render(_camera, renderTexture);
 

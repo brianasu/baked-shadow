@@ -14,25 +14,34 @@ SubShader {
 CGPROGRAM
 #pragma vertex vert
 #pragma fragment frag
+#pragma multi_compile _SHADOWMODE_STANDARD _SHADOWMODE_VSM _SHADOWMODE_PCF _SHADOWMODE_PCSS
+#pragma multi_compile _ _ALPHATEST
+
 #include "UnityCG.cginc"
 struct v2f {
     float4 pos : SV_POSITION;
-//    float4 nz : TEXCOORD0;
     float depth : TEXCOORD0;
+	float2 uv : TEXCOORD1;
 };
+uniform float4 _MainTex_ST;
 v2f vert( appdata_base v ) {
     v2f o;
     o.pos = UnityObjectToClipPos(v.vertex);
-//    o.nz.xyz = COMPUTE_VIEW_NORMAL;
-//    o.nz.w = COMPUTE_DEPTH_01;
+	o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
     o.depth = COMPUTE_DEPTH_01;
     return o;
 }
-float4 frag(v2f i) : SV_Target {
-
-	// i.depth = i.depth * 0.5 + 0.5;
+uniform sampler2D _MainTex;
+float4 frag(v2f i) : SV_Target 
+{
+	fixed4 col = tex2D(_MainTex, i.uv);
+#if _ALPHATEST
+    clip(col.a - 0.1);
+#endif
+#if _SHADOWMODE_VSM
+	i.depth = i.depth * 0.5 + 0.5;
+#endif
 	return float4(i.depth, i.depth * i.depth, 0, 0);
-//	return EncodeDepthNormal (i.nz.w, i.nz.xyz);
 }
 ENDCG
 	}
